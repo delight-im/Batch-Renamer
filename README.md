@@ -80,9 +80,9 @@ php batch-renamer.php <mode> <format> [<directory>] [<timeOffset>]
 
 #### Numeration
 
- * `%nd0`: consecutive number in decimal digits
- * `%nx0`: consecutive number in lowercase hexadecimal digits
- * `%nh0`: consecutive number in uppercase hexadecimal digits
+ * `%nd1`, `%nd2`, … or `%nd9`: consecutive number in (at least 1, 2, … or 9) decimal digits
+ * `%nx1`, `%nx2`, … or `%nx9`: consecutive number in (at least 1, 2, … or 9) lowercase hexadecimal digits
+ * `%nh1`, `%nh2`, … or `%nh9`: consecutive number in (at least 1, 2, … or 9) uppercase hexadecimal digits
 
 #### Segments of the current filename without extension
 

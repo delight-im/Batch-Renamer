@@ -110,15 +110,24 @@ foreach ($files as $file) {
 			}
 			// TODO: drop support for `ndc` format string in next major version
 			elseif (\substr($matches[1], 0, 2) === 'nd' || $matches[1] === 'ndc') {
-				return $total;
+				$number = $total;
+				$digits = (int) \substr($matches[1], 2);
+
+				return \str_pad($number, $digits, '0', \STR_PAD_LEFT);
 			}
 			// TODO: drop support for `nhl` format string in next major version
 			elseif (\substr($matches[1], 0, 2) === 'nx' || $matches[1] === 'nhl') {
-				return \strtolower(\dechex($total));
+				$number = \strtolower(\dechex($total));
+				$digits = (int) \substr($matches[1], 2);
+
+				return \str_pad($number, $digits, '0', \STR_PAD_LEFT);
 			}
 			// TODO: drop support for `nhu` format string in next major version
 			elseif (\substr($matches[1], 0, 2) === 'nh' || $matches[1] === 'nhu') {
-				return \strtoupper(\dechex($total));
+				$number = \strtoupper(\dechex($total));
+				$digits = (int) \substr($matches[1], 2);
+
+				return \str_pad($number, $digits, '0', \STR_PAD_LEFT);
 			}
 			elseif (\substr($matches[1], 0, 1) === 'e') {
 				$exif = @\exif_read_data($fileObj->getRealPath(), null, true, false);
