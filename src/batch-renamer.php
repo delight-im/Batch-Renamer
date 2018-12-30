@@ -91,7 +91,7 @@ foreach ($files as $file) {
 				return $fileObj->getBasename();
 			}
 			elseif ($matches[1] === 'fnw') {
-				return $fileObj->getBasename(\FILENAME_EXTENSION_SEPARATOR . $fileObj->getExtension());
+				return \makeFilenameWithoutExtension($fileObj);
 			}
 			elseif ($matches[1] === 'feo') {
 				return $fileObj->getExtension();
@@ -308,4 +308,8 @@ function formatDateTimeByIdentifier(\DateTime $dateTime, $identifier) {
 		case 'u': return $dateTime->format('U');
 		default: throw new \Exception('Unknown identifier: ' . $identifier);
 	}
+}
+
+function makeFilenameWithoutExtension(\SplFileInfo $file) {
+	return $file->getBasename(\FILENAME_EXTENSION_SEPARATOR . $file->getExtension());
 }
