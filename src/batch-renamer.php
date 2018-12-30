@@ -15,6 +15,9 @@
 
 \define('TIME_OFFSET_REGEX', '/^([+-]?)(P(?:[0-9YMWD]+)?(?:T[0-9HMS]+)?)$/i');
 \define('FORMAT_PLACEHOLDERS_REGEX', '/%([a-z0-9]{3})/i');
+\define('WHITESPACE_REGEX', '/\\s+/');
+\define('DASHES_AND_HYPHENS_REGEX', '/[' . "\u{002D}\u{005F}\u{2010}\u{2011}\u{2012}\u{2013}\u{2014}" . ']+/');
+\define('PARENTHESES_AND_BRACKETS_REGEX', '/[' . "\u{0028}\u{0029}\u{003C}\u{003E}\u{005B}\\\u{005D}\u{007B}\u{007D}" . ']+/');
 \define('EXIF_DATE_AND_TIME_LENGTH', 19);
 \define('EXIF_DATE_AND_TIME_FORMAT', 'Y:m:d H:i:s');
 \define('DATETIME_FORMAT_IDENTIFIERS', 'fdtymahisewku');
@@ -180,6 +183,92 @@ foreach ($files as $file) {
 							}
 						}
 
+						return \UNKNOWN_INFORMATION_MARKER;
+					}
+				}
+			}
+			elseif (\preg_match('/([wdp])([1-9ni])([1-9n])/', $matches[1], $segmentation)) {
+				switch ($segmentation[1]) {
+					case 'w':
+						$patternRegex = \WHITESPACE_REGEX;
+						break;
+					case 'd':
+						$patternRegex = \DASHES_AND_HYPHENS_REGEX;
+						break;
+					case 'p':
+						$patternRegex = \PARENTHESES_AND_BRACKETS_REGEX;
+						break;
+					default:
+						$patternRegex = null;
+						break;
+				}
+
+				if (!empty($patternRegex)) {
+					$filenameWithoutExtension = \makeFilenameWithoutExtension($fileObj);
+
+					$numberOfSeparators = \preg_match_all(
+						$patternRegex,
+						$filenameWithoutExtension,
+						$separators,
+						\PREG_SET_ORDER | \PREG_OFFSET_CAPTURE
+					);
+
+					if (!empty($separators)) {
+						if ($segmentation[3] === 'n') {
+							$segmentation[3] = $numberOfSeparators + 1;
+						}
+						else {
+							$segmentation[3] = (int) $segmentation[3];
+						}
+
+						if ($segmentation[2] === 'n') {
+							$segmentation[2] = $numberOfSeparators + 1;
+						}
+						elseif ($segmentation[2] === 'i') {
+							$segmentation[3] = $numberOfSeparators - $segmentation[3] + 2;
+							$segmentation[2] = $segmentation[3];
+						}
+						else {
+							$segmentation[2] = (int) $segmentation[2];
+						}
+
+						if ($segmentation[2] > $segmentation[3]) {
+							$segmentation[2] = $numberOfSeparators - $segmentation[2] + 2;
+							$segmentation[3] = $numberOfSeparators - $segmentation[3] + 2;
+						}
+
+						$indexBefore = ((int) $segmentation[2]) - 2;
+						$indexAfter = ((int) $segmentation[3]) - 1;
+
+						if ($indexBefore === -1) {
+							$offsetStart = 0;
+						}
+						elseif (isset($separators[$indexBefore])) {
+							$offsetStart = $separators[$indexBefore][0][1] + \strlen($separators[$indexBefore][0][0]);
+						}
+						else {
+							return \UNKNOWN_INFORMATION_MARKER;
+						}
+
+						if ($indexAfter === $numberOfSeparators) {
+							$offsetEnd = \strlen($filenameWithoutExtension);
+						}
+						elseif (isset($separators[$indexAfter])) {
+							$offsetEnd = $separators[$indexAfter][0][1];
+						}
+						else {
+							return \UNKNOWN_INFORMATION_MARKER;
+						}
+
+						$segmented = \substr(
+							$filenameWithoutExtension,
+							$offsetStart,
+							$offsetEnd - $offsetStart
+						);
+
+						return \trim($segmented);
+					}
+					else {
 						return \UNKNOWN_INFORMATION_MARKER;
 					}
 				}
