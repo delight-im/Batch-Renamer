@@ -108,13 +108,16 @@ foreach ($files as $file) {
 			elseif ($matches[1] === 'fsb') {
 				return $fileObj->getSize();
 			}
-			elseif ($matches[1] === 'ndc') {
+			// TODO: drop support for `ndc` format string in next major version
+			elseif (\substr($matches[1], 0, 2) === 'nd' || $matches[1] === 'ndc') {
 				return $total;
 			}
-			elseif ($matches[1] === 'nhl') {
+			// TODO: drop support for `nhl` format string in next major version
+			elseif (\substr($matches[1], 0, 2) === 'nx' || $matches[1] === 'nhl') {
 				return \strtolower(\dechex($total));
 			}
-			elseif ($matches[1] === 'nhu') {
+			// TODO: drop support for `nhu` format string in next major version
+			elseif (\substr($matches[1], 0, 2) === 'nh' || $matches[1] === 'nhu') {
 				return \strtoupper(\dechex($total));
 			}
 			elseif (\substr($matches[1], 0, 1) === 'e') {
