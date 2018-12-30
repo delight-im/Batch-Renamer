@@ -84,6 +84,56 @@ php batch-renamer.php <mode> <format> [<directory>] [<timeOffset>]
  * `%nhl`: consecutive number in lowercase hexadecimal digits
  * `%nhu`: consecutive number in uppercase hexadecimal digits
 
+#### Segments of the current filename without extension
+
+##### Separated by whitespace
+
+###### From the start of the filename
+
+ * `%w11`, `%w12`, `%w13`, …, `%w19`, … or `%w1n`: part from the first segment to the first, second, third, …, ninth, … or last segment
+ * `%w22`, `%w23`, `%w24`, …, `%w29`, … or `%w2n`: part from the second segment to the second, third, fourth, …, ninth, … or last segment
+ * `%w33`, `%w34`, `%w35`, …, `%w39`, … or `%w3n`: part from the third segment to the third, fourth, fifth, …, ninth, … or last segment
+ * …
+
+###### From the end of the filename
+
+ * `%wi1`, `%w21`, `%w31`, …, `%w91`, … or `%wn1`: part from the first segment to the first, second, third, …, ninth, … or last segment
+ * `%wi2`, `%w32`, `%w42`, …, `%w92`, … or `%wn2`: part from the second segment to the second, third, fourth, …, ninth, … or last segment
+ * `%wi3`, `%w43`, `%w53`, …, `%w93`, … or `%wn3`: part from the third segment to the third, fourth, fifth, …, ninth, … or last segment
+ * …
+
+##### Separated by dashes and hyphens
+
+###### From the start of the filename
+
+ * `%d11`, `%d12`, `%d13`, …, `%d19`, … or `%d1n`: part from the first segment to the first, second, third, …, ninth, … or last segment
+ * `%d22`, `%d23`, `%d24`, …, `%d29`, … or `%d2n`: part from the second segment to the second, third, fourth, …, ninth, … or last segment
+ * `%d33`, `%d34`, `%d35`, …, `%d39`, … or `%d3n`: part from the third segment to the third, fourth, fifth, …, ninth, … or last segment
+ * …
+
+###### From the end of the filename
+
+ * `%di1`, `%d21`, `%d31`, …, `%d91`, … or `%dn1`: part from the first segment to the first, second, third, …, ninth, … or last segment
+ * `%di2`, `%d32`, `%d42`, …, `%d92`, … or `%dn2`: part from the second segment to the second, third, fourth, …, ninth, … or last segment
+ * `%di3`, `%d43`, `%d53`, …, `%d93`, … or `%dn3`: part from the third segment to the third, fourth, fifth, …, ninth, … or last segment
+ * …
+
+##### Separated by parentheses and brackets
+
+###### From the start of the filename
+
+ * `%p11`, `%p12`, `%p13`, …, `%p19`, … or `%p1n`: part from the first segment to the first, second, third, …, ninth, … or last segment
+ * `%p22`, `%p23`, `%p24`, …, `%p29`, … or `%p2n`: part from the second segment to the second, third, fourth, …, ninth, … or last segment
+ * `%p33`, `%p34`, `%p35`, …, `%p39`, … or `%p3n`: part from the third segment to the third, fourth, fifth, …, ninth, … or last segment
+ * …
+
+###### From the end of the filename
+
+ * `%pi1`, `%p21`, `%p31`, …, `%p91`, … or `%pn1`: part from the first segment to the first, second, third, …, ninth, … or last segment
+ * `%pi2`, `%p32`, `%p42`, …, `%p92`, … or `%pn2`: part from the second segment to the second, third, fourth, …, ninth, … or last segment
+ * `%pi3`, `%p43`, `%p53`, …, `%p93`, … or `%pn3`: part from the third segment to the third, fourth, fifth, …, ninth, … or last segment
+ * …
+
 #### EXIF
 
  * `%eiw`: image width in pixels
