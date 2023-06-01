@@ -130,7 +130,7 @@ foreach ($files as $file) {
 				return \str_pad($number, $digits, '0', \STR_PAD_LEFT);
 			}
 			elseif (\substr($matches[1], 0, 1) === 'e') {
-				$exif = @\exif_read_data($fileObj->getRealPath(), null, true, false);
+				$exif = \readExifDataFromFile($fileObj->getRealPath());
 
 				if (\substr($matches[1], 1) === 'iw') {
 					if (!empty($exif) && !empty($exif['EXIF']) && isset($exif['EXIF']['ExifImageWidth']) && isset($exif['EXIF']['ExifImageLength'])) {
@@ -418,6 +418,12 @@ function makeFilenameWithoutExtension(\SplFileInfo $file) {
 function readExifDataFromFile($filePath) {
 	if (empty($filePath)) {
 		return null;
+	}
+
+	$exifExtensionResultArray = @\exif_read_data($filePath, null, true, false);
+
+	if ($exifExtensionResultArray !== false) {
+		return $exifExtensionResultArray;
 	}
 
 	$exifToolCommandStr = 'env -i exiftool ' . \escapeshellarg($filePath) . ' 2>/dev/null';
