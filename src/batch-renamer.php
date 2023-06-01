@@ -414,3 +414,259 @@ function formatDateTimeByIdentifier(\DateTime $dateTime, $identifier) {
 function makeFilenameWithoutExtension(\SplFileInfo $file) {
 	return $file->getBasename(\FILENAME_EXTENSION_SEPARATOR . $file->getExtension());
 }
+
+function readExifDataFromFile($filePath) {
+	if (empty($filePath)) {
+		return null;
+	}
+
+	$exifToolCommandStr = 'env -i exiftool ' . \escapeshellarg($filePath) . ' 2>/dev/null';
+	$exifToolResultStr = @\shell_exec($exifToolCommandStr);
+
+	if ($exifToolResultStr === false || $exifToolResultStr === null) {
+		return null;
+	}
+
+	$output = [];
+	$output['FILE'] = [];
+	$output['FILE']['FileName'] = \readExifValueFromString($exifToolResultStr, 'File Name');
+	$output['FILE']['FileDateTime'] = @\filemtime($filePath);
+	$output['FILE']['FileSize'] = (int) @\filesize($filePath);
+	$output['FILE']['MimeType'] = \readExifValueFromString($exifToolResultStr, 'MIME Type');
+	$output['COMPUTED'] = [];
+	$output['COMPUTED']['Width'] = (int) \readExifValueFromString($exifToolResultStr, 'Image Width');
+	$output['COMPUTED']['Height'] = (int) \readExifValueFromString($exifToolResultStr, 'Image Height');
+	$output['COMPUTED']['html'] = 'width="' . $output['COMPUTED']['Width'] . '" height="' . $output['COMPUTED']['Height'] . '"';
+	$output['IFD0'] = [];
+	$output['IFD0']['ImageWidth'] = (int) \readExifValueFromString($exifToolResultStr, 'Image Width');
+	$output['IFD0']['ImageLength'] = (int) \readExifValueFromString($exifToolResultStr, 'Image Height');
+	$output['IFD0']['Make'] = \readExifValueFromString($exifToolResultStr, 'Make');
+	$output['IFD0']['Model'] = \readExifValueFromString($exifToolResultStr, 'Camera Model Name');
+	$output['IFD0']['Orientation'] = readExifOrientationFromString($exifToolResultStr);
+	$output['IFD0']['XResolution'] = (int) \readExifValueFromString($exifToolResultStr, 'X Resolution') . '/1';
+	$output['IFD0']['YResolution'] = (int) \readExifValueFromString($exifToolResultStr, 'Y Resolution') . '/1';
+	$output['IFD0']['ResolutionUnit'] = readExifResolutionUnitFromString($exifToolResultStr);
+	$output['IFD0']['Software'] = \readExifValueFromString($exifToolResultStr, 'Software');
+	$output['IFD0']['DateTime'] = \readExifValueFromString($exifToolResultStr, 'Modify Date');
+	$output['EXIF'] = [];
+	$output['EXIF']['ISOSpeedRatings'] = (int) \readExifValueFromString($exifToolResultStr, 'ISO');
+	$output['EXIF']['ExifVersion'] = \readExifValueFromString($exifToolResultStr, 'Exif Version');
+	$output['EXIF']['DateTimeOriginal'] = \readExifValueFromString($exifToolResultStr, 'Date/Time Original');
+	$output['EXIF']['DateTimeDigitized'] = \readExifValueFromString($exifToolResultStr, 'Create Date');
+	$output['EXIF']['UndefinedTag:0x9010'] = \readExifValueFromString($exifToolResultStr, 'Offset Time');
+	$output['EXIF']['UndefinedTag:0x9011'] = \readExifValueFromString($exifToolResultStr, 'Offset Time Original');
+	$output['EXIF']['UndefinedTag:0x9012'] = \readExifValueFromString($exifToolResultStr, 'Offset Time Digitized');
+	$output['EXIF']['SubSecTime'] = \readExifValueFromString($exifToolResultStr, 'Sub Sec Time');
+	$output['EXIF']['SubSecTimeOriginal'] = \readExifValueFromString($exifToolResultStr, 'Sub Sec Time Original');
+	$output['EXIF']['SubSecTimeDigitized'] = \readExifValueFromString($exifToolResultStr, 'Sub Sec Time Digitized');
+	$output['EXIF']['ExifImageWidth'] = (int) \readExifValueFromString($exifToolResultStr, 'Exif Image Width');
+	$output['EXIF']['ExifImageLength'] = (int) \readExifValueFromString($exifToolResultStr, 'Exif Image Height');
+	$output['EXIF']['ExposureMode'] = readExifExposureModeFromString($exifToolResultStr);
+	$output['EXIF']['WhiteBalance'] = readExifWhiteBalanceFromString($exifToolResultStr);
+	$output['EXIF']['FocalLengthIn35mmFilm'] = (int) \readExifValueFromString($exifToolResultStr, 'Focal Length In 35mm Format');
+	$output['EXIF']['Contrast'] = readExifContrastFromString($exifToolResultStr);
+	$output['EXIF']['Saturation'] = readExifSaturationFromString($exifToolResultStr);
+	$output['EXIF']['Sharpness'] = readExifSharpnessFromString($exifToolResultStr);
+	$output['EXIF']['SubjectDistanceRange'] = readExifSubjectDistanceRangeFromString($exifToolResultStr);
+	$output['EXIF']['UndefinedTag:0xA433'] = \readExifValueFromString($exifToolResultStr, 'Lens Make');
+	$output['EXIF']['UndefinedTag:0xA434'] = \readExifValueFromString($exifToolResultStr, 'Lens Model');
+	$output['GPS'] = [];
+	$output['GPS']['GPSLatitudeRef'] = \substr(\readExifValueFromString($exifToolResultStr, 'GPS Latitude Ref'), 0, 1);
+	$output['GPS']['GPSLatitude'] = \readExifGpsCoordinatesFromString($exifToolResultStr, 'GPS Latitude');
+	$output['GPS']['GPSLongitudeRef'] = \substr(\readExifValueFromString($exifToolResultStr, 'GPS Longitude Ref'), 0, 1);
+	$output['GPS']['GPSLongitude'] = \readExifGpsCoordinatesFromString($exifToolResultStr, 'GPS Longitude');
+	$output['GPS']['GPSTimeStamp'] = \readExifGpsTimeStampFromString($exifToolResultStr);
+	$output['GPS']['GPSImgDirectionRef'] = readExifGpsDirectionRefFromString($exifToolResultStr, 'GPS Img Direction Ref');
+	$output['GPS']['GPSImgDirection'] = (int) \readExifValueFromString($exifToolResultStr, 'GPS Img Direction') . '/1';
+	$output['GPS']['GPSDateStamp'] = \readExifValueFromString($exifToolResultStr, 'GPS Date Stamp');
+
+	return $output;
+}
+
+function readExifValueFromString($exifLines, $exifKey) {
+	$delimiter = '/';
+	$pattern = $delimiter . '^' . \preg_quote($exifKey, $delimiter) . '[\t ]*:[\t ]*([^\r\n]+)$' . $delimiter . 'm';
+	$matched = \preg_match($pattern, $exifLines, $matches);
+
+	if ($matched === 1) {
+		return $matches[1];
+	}
+	else {
+		return null;
+	}
+}
+
+function readExifOrientationFromString($exifLines) {
+	$value = \readExifValueFromString($exifLines, 'Orientation');
+
+	switch ($value) {
+		case 'Horizontal (normal)':
+			return 1;
+		case 'Mirror horizontal':
+			return 2;
+		case 'Rotate 180':
+			return 3;
+		case 'Mirror vertical':
+			return 4;
+		case 'Mirror horizontal and rotate 270 CW':
+			return 5;
+		case 'Rotate 90 CW':
+			return 6;
+		case 'Mirror horizontal and rotate 90 CW':
+			return 7;
+		case 'Rotate 270 CW':
+			return 8;
+		default:
+			return null;
+	}
+}
+
+function readExifResolutionUnitFromString($exifLines) {
+	$value = \readExifValueFromString($exifLines, 'Resolution Unit');
+
+	switch ($value) {
+		case 'None':
+			return 1;
+		case 'inches':
+			return 2;
+		case 'cm':
+			return 3;
+		default:
+			return null;
+	}
+}
+
+function readExifExposureModeFromString($exifLines) {
+	$value = \readExifValueFromString($exifLines, 'Exposure Mode');
+
+	switch ($value) {
+		case 'Auto':
+			return 0;
+		case 'Manual':
+			return 1;
+		case 'Auto bracket':
+			return 2;
+		default:
+			return null;
+	}
+}
+
+function readExifWhiteBalanceFromString($exifLines) {
+	$value = \readExifValueFromString($exifLines, 'White Balance');
+
+	switch ($value) {
+		case 'Auto':
+			return 0;
+		case 'Manual':
+			return 1;
+		default:
+			return null;
+	}
+}
+
+function readExifContrastFromString($exifLines) {
+	$value = \readExifValueFromString($exifLines, 'Contrast');
+
+	switch ($value) {
+		case 'Normal':
+			return 0;
+		case 'Low':
+			return 1;
+		case 'High':
+			return 2;
+		default:
+			return null;
+	}
+}
+
+function readExifSaturationFromString($exifLines) {
+	$value = \readExifValueFromString($exifLines, 'Saturation');
+
+	switch ($value) {
+		case 'Normal':
+			return 0;
+		case 'Low':
+			return 1;
+		case 'High':
+			return 2;
+		default:
+			return null;
+	}
+}
+
+function readExifSharpnessFromString($exifLines) {
+	$value = \readExifValueFromString($exifLines, 'Sharpness');
+
+	switch ($value) {
+		case 'Normal':
+			return 0;
+		case 'Soft':
+			return 1;
+		case 'Hard':
+			return 2;
+		default:
+			return null;
+	}
+}
+
+function readExifSubjectDistanceRangeFromString($exifLines) {
+	$value = \readExifValueFromString($exifLines, 'Subject Distance Range');
+
+	switch ($value) {
+		case 'Unknown':
+			return 0;
+		case 'Macro':
+			return 1;
+		case 'Close':
+			return 2;
+		case 'Distant':
+			return 3;
+		default:
+			return null;
+	}
+}
+
+function readExifGpsCoordinatesFromString($exifLines, $exifKey) {
+	$value = \readExifValueFromString($exifLines, $exifKey);
+	$matched = \preg_match('/^([0-9]+) deg ([0-9]+)\' ([0-9.]+)" [NSWE]$/', $value, $matches);
+
+	if ($matched === 1) {
+		return [
+			((int) $matches[1]) . '/1',
+			((int) $matches[2]) . '/1',
+			((float) $matches[3] * 100) . '/100',
+		];
+	}
+	else {
+		return null;
+	}
+}
+
+function readExifGpsTimeStampFromString($exifLines) {
+	$value = \readExifValueFromString($exifLines, 'GPS Time Stamp');
+	$matched = \preg_match('/^([0-9]{2}):([0-9]{2}):([0-9]{2})$/', $value, $matches);
+
+	if ($matched === 1) {
+		return [
+			((int) $matches[1]) . '/1',
+			((int) $matches[2]) . '/1',
+			((int) $matches[3]) . '/1',
+		];
+	}
+	else {
+		return null;
+	}
+}
+
+function readExifGpsDirectionRefFromString($exifLines, $exifKey) {
+	$value = \readExifValueFromString($exifLines, $exifKey);
+
+	switch ($value) {
+		case 'Magnetic North':
+			return 'M';
+		case 'True North':
+			return 'T';
+		default:
+			return null;
+	}
+}
