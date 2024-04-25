@@ -502,6 +502,18 @@ function readExifValueFromString($exifLines, $exifKey) {
 	}
 }
 
+function readFirstExifValueFromStrings($exifLines, $exifKeys) {
+	foreach ($exifKeys as $exifKey) {
+		$exifValue = \readExifValueFromString($exifLines, $exifKey);
+
+		if (!empty($exifValue)) {
+			return $exifValue;
+		}
+	}
+
+	return null;
+}
+
 function readExifOrientationFromString($exifLines) {
 	$value = \readExifValueFromString($exifLines, 'Orientation');
 
