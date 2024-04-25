@@ -447,7 +447,7 @@ function readExifDataFromFile($filePath) {
 	$output['IFD0']['ImageWidth'] = (int) \readExifValueFromString($exifToolResultStr, 'Image Width');
 	$output['IFD0']['ImageLength'] = (int) \readExifValueFromString($exifToolResultStr, 'Image Height');
 	$output['IFD0']['Make'] = \readExifValueFromString($exifToolResultStr, 'Make');
-	$output['IFD0']['Model'] = \readExifValueFromString($exifToolResultStr, 'Camera Model Name');
+	$output['IFD0']['Model'] = \readFirstExifValueFromStrings($exifToolResultStr, [ 'Camera Model Name'/* e.g. Apple HEIC */, 'Model'/* e.g. Apple MOV */ ]);
 	$output['IFD0']['Orientation'] = readExifOrientationFromString($exifToolResultStr);
 	$output['IFD0']['XResolution'] = (int) \readExifValueFromString($exifToolResultStr, 'X Resolution') . '/1';
 	$output['IFD0']['YResolution'] = (int) \readExifValueFromString($exifToolResultStr, 'Y Resolution') . '/1';
